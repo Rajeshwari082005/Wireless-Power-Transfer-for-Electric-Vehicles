@@ -1,0 +1,48 @@
+// Wireless Power Transfer for EV - Arduino Control Code
+// Monitors voltage, current, and indicates charging status
+
+const int voltagePin = A0;   // Voltage sensor connected to A0
+const int currentPin = A1;   // Current sensor connected to A1
+const int ledCharging = 9;   // LED indicates charging
+const int ledFull = 10;      // LED indicates battery full
+
+float voltage = 0.0;
+float current = 0.0;
+float power   = 0.0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ledCharging, OUTPUT);
+  pinMode(ledFull, OUTPUT);
+}
+
+void loop() {
+  // Read sensor values
+  int rawVoltage = analogRead(voltagePin);
+  int rawCurrent = analogRead(currentPin);
+
+  // Convert readings (calibration required for real sensors)
+  voltage = (rawVoltage / 1023.0) * 25.0;   // Assuming max 25V sensor
+  current = (rawCurrent / 1023.0) * 10.0;   // Assuming max 10A sensor
+  power = voltage * current;
+
+  Serial.print("Voltage: "); Serial.print(voltage); Serial.print(" V, ");
+  Serial.print("Current: "); Serial.print(current); Serial.print(" A, ");
+  Serial.print("Power: "); Serial.print(power); Serial.println(" W");
+
+  // Charging logic
+  if (voltage > 12.0 && current > 0.5) {  
+    digitalWrite(ledCharging, HIGH);
+    digitalWrite(ledFull, LOW);
+  } 
+  else if (voltage >= 14.4 && current < 0.2) {  // Full charge condition
+    digitalWrite(ledCharging, LOW);
+    digitalWrite(ledFull, HIGH);
+  } 
+  else {
+    digitalWrite(ledCharging, LOW);
+    digitalWrite(ledFull, LOW);
+  }
+
+  delay(1000); // Update every second
+}
